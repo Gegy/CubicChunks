@@ -22,8 +22,13 @@
         "common.chunk.MixinNoiseBasedChunkGenerator",
         "common.chunk.MixinProtoChunk",
         "common.chunk.MixinProtoTickList",
+        "common.chunk.storage.MixinPoiManager",
+        "common.chunk.storage.MixinSectionStorage",
         "common.entity.MixinBoatEntity",
+        "common.entity.MixinEntitySectionStorage",
+        "common.entity.MixinPersistentEntitySectionManager",
         "common.entity.MixinServerPlayerEntity",
+        "common.entity.MixinTransientEntitySectionManager",
         "common.MixinBlockPos",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
@@ -66,9 +71,7 @@
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
         "common.world.structure.MixinStructureStart",
-        "common.world.structure.pieces.MixinOceanRuinPieces",
-        "common.chunk.storage.MixinSectionStorage",
-        "common.chunk.storage.MixinPoiManager"
+        "common.world.structure.pieces.MixinOceanRuinPieces"
     ],
     "client": [
         "client.debug.MixinClientWorld",

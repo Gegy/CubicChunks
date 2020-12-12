@@ -18,10 +18,12 @@ import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketHeightmapChanges;
@@ -165,11 +167,17 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (cubePos == null) {
             return completableFuture.thenRunAsync(action, executor);
         }
-        return completableFuture.thenRunAsync(() -> {});
+
         // TODO: this is for entity tracking, the runnable goes to PersistentEntitySectionManager#updateChunkStatus
-        //return completableFuture.thenRunAsync(() -> {
-        //    chunkMap.onFullCubeStatusChange(this.cubePos, fullChunkStatus);
-        //}, executor);
+        return completableFuture.thenRunAsync(() -> {
+            ((ChunkManagerAccess) chunkMap).invokeOnFullChunkStatusChange(new ImposterChunkPos(this.cubePos), fullChunkStatus);
+        }, executor);
+    }
+
+    @Redirect(method = "demoteFullChunk", at = @At(value = "FIELD",
+        target = "Lnet/minecraft/server/level/ChunkHolder;pos:Lnet/minecraft/world/level/ChunkPos;"))
+    private ChunkPos chunkPos(ChunkHolder holder) {
+        return (this.cubePos != null) ? new ImposterChunkPos(this.cubePos) : this.pos;
     }
 
     @Redirect(method = "scheduleFullChunkPromotion", at = @At(
@@ -185,16 +193,13 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 });
             });
         }
+
         //noinspection unchecked
         return ((CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>>) unsafeCast(completableFuture)).thenAccept((either) -> {
             either.ifLeft((BigCube levelChunk) -> {
                 f2.complete(null);
             });
         });
-        // TODO: this is for entity tracking, the runnable goes to PersistentEntitySectionManager#updateChunkStatus
-        //return completableFuture.thenRunAsync(() -> {
-        //    chunkMap.onFullCubeStatusChange(this.cubePos, fullChunkStatus);
-        //}, executor);
     }
 
     @Inject(method = "demoteFullChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;onFullChunkStatusChange"
